@@ -1,0 +1,29 @@
+---
+title: "Preliminary Data Examination"
+author: "Marliese Baer"
+format: html
+editor: visual
+---
+
+
+First lets set things up
+```{r}
+rm(list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(readr)
+```
+
+
+Now let's pull in the data
+```{r}
+Cape_May <- read.csv(here("Data", "HawkWatch Data csv", "Cape_May.csv"))
+Goshute_Mtns <- read.csv(here("Data", "HawkWatch Data csv", "Goshute_Mtns.csv"))
+Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data csv", "Hawk_Ridge.csv"))
+```
+
+```{r}
+Cape_May
+```
+
