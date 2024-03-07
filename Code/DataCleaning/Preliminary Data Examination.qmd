@@ -31,7 +31,7 @@ Hawk_Ridge
 ```{r}
 Cape_May <- read.csv(here("Data", "try", "Cape_May.csv"))
 ```
-trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below.
+trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
 
 ### Tidying the Goshutes data set
 ```{r}
