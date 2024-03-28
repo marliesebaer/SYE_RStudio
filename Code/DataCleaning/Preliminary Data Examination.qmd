@@ -57,6 +57,8 @@ Gtake_1 <- Goshute_Mtns_2 |>
 
 #need to standardize by hour somehow. perhaps by day number observed/hours observed?
 
+#answer per erika: 1) 
+
 #move spp and duration to the start of the df (reorder)
 
 ```
@@ -64,27 +66,38 @@ Gtake_1 <- Goshute_Mtns_2 |>
 
 ### Tidying Hawk Ridge
 ```{r}
-Hawk_Ridge_2 <- read.csv(here("Data", "HawkWatch Data csv", "Hawk_Ridge.csv"), na = c("NA"), skip = 3)
-head(Hawk_Ridge_2)
+Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data csv", "Hawk_Ridge.csv"), na = c("NA"))
+
+newnames <- paste(Hawk_Ridge[3, ], Hawk_Ridge[4, ])
+
+Hawk_Ridge_2 <- Hawk_Ridge |>
+  set_names(newnames) |>
+  slice(-1, -2, -3, -4)
+
+### now clean the data
+  
+#take_1H <- 
+
+Hawk_Ridge_2 |>
+  pivot_longer(c(6:87), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = as.factor(Date)) |>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_spp)) |>
+  mutate(Duration = as.double(Duration))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration))
 
 #cant slice(-(1)) because in this df they split up into age classes and that row actually contains important info
 #how can i combine row 1 into column headers? I could factor_recode but it would just take a long time
 #because can't have column names that are the same, R added .x to the end of the spp codes that are repeated, x=the number of that same spp repeated as a column.
 # I can't really pivot longer until this issue is resolved because it will mess some stuff up.
 #need to have just one column per species and have a new column for age and a new column for unit
-
-#take_1H <- Hawk_Ridge_2 |>
-#  pivot_longer(c(6:28), names_to = "Species",
-#               values_to = "n_spp") |>
-#  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
-#  mutate(Date = as.factor(Date)) |>
-#  mutate(n_spp = as.double(n_spp)) |>
-#  mutate(Species = as.factor(Species)) |>
-#  group_by(Date, Species) |>
-#  mutate(total_n = sum(n_spp)) |>
-#  mutate(Duration = as.double(Duration))|>
-#  group_by(Date, Species) |>
-#  mutate(duration_min_day = sum(Duration))
 ```
 
 
