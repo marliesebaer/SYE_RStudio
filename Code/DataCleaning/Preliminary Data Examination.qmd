@@ -59,7 +59,9 @@ try$year <- lubridate::year(try$Date)
 try$month <- lubridate::month(try$Date)
 try$julian <- lubridate::yday(try$Date) 
 
-Cape_May_2 |>
+### code above works!! DO NOT GET RID OF UNTIL SURE CODE BELOW WORKS!!
+
+try2 <- Cape_May_2 |>
   pivot_longer(c(6:30), names_to = "Species_age",
                values_to = "n_spp") |>
   separate(Species_age, c("Species", "Age"),
@@ -74,16 +76,15 @@ Cape_May_2 |>
   group_by(Date, Species) |>
   mutate(duration_min_day = sum(Duration)) |>
   mutate(year = year(Date)) |>
-  mutate(month = month(Date), label = TRUE) |>
-  select(Date, Species, Duration, n_individ, total_n, duration_min_day)
+  mutate(month = month(Date, label = TRUE)) |>
+  mutate(wday = wday(Date, label = TRUE)) |>
+  select(Date, Species, Duration, n_individ, total_n, duration_min_day, year, month, wday)
 
-stocks_long |> mutate(day_of_week = wday(start_date))
-stocks_long |> mutate(day_of_week = wday(start_date,
-                                          label = TRUE, abbr = FALSE))
-
-try |>
-  
-
+try2 <- try2 |> 
+  group_by(Date, Species) |>
+  mutate(individ_per_min = mean(total_n/duration_min_day)) |>
+  mutate(individ_per_hour = individ_per_min*60) |>
+  mutate(week = week(Date))
 
 
 ```
@@ -118,6 +119,10 @@ Cape_may_clean <- Cape_May_2 |>
 
 write.csv(Cape_may_clean, here("Data","Processed Data","CM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
 
+```
+trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
+
+```{r}
 ####after this point, I am doing work that should be in 'Data Exploration.qmd' but isn't because for some reason the column names have a . at the end after I export
 
 #make year, month, and julian date columns
@@ -188,9 +193,8 @@ ggplot(data = try4, aes(x = julian,
 
 
 ##what is the issue here (above)?
-
 ```
-trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
+
 
 ### Tidying the Goshutes data set
 ```{r}
