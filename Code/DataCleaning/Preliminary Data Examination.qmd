@@ -12,13 +12,14 @@ library(tidyverse)
 library(here)
 library(ggfortify)
 library(readr)
+library(lubridate)
 ```
 
 ## Pull in original data
 ```{r}
-Cape_May <- read.csv(here("Data", "HawkWatch Data csv", "Cape_May.csv"))
-Goshute_Mtns <- read.csv(here("Data", "HawkWatch Data csv", "Goshute_Mtns.csv"))
-Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data csv", "Hawk_Ridge.csv"))
+Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"))
+Goshute_Mtns <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Goshute_Mtns.csv"))
+Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Hawk_Ridge.csv"))
 
 Cape_May
 Goshute_Mtns
@@ -28,23 +29,182 @@ Hawk_Ridge
 ## Tidying
 
 ### Tidying the Cape May data set
+
 ```{r}
-Cape_May <- read.csv(here("Data", "try", "Cape_May.csv"))
+Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"), na = c("NA"))
+
+newnamesCM <- paste(Cape_May[3, ], Cape_May[4, ])
+
+Cape_May_2 <- Cape_May |>
+  set_names(newnamesCM) |>
+  slice(-1, -2, -3, -4, -5)
+
+try <- Cape_May_2 |>
+  pivot_longer(c(6:30), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_individ = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_individ)) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration)) |>
+  select(Date, Species, Duration, n_individ, total_n, duration_min_day)
+
+try$year <- lubridate::year(try$Date)
+try$month <- lubridate::month(try$Date)
+try$julian <- lubridate::yday(try$Date) 
+
+Cape_May_2 |>
+  pivot_longer(c(6:30), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_individ = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_individ)) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration)) |>
+  mutate(year = year(Date)) |>
+  mutate(month = month(Date), label = TRUE) |>
+  select(Date, Species, Duration, n_individ, total_n, duration_min_day)
+
+stocks_long |> mutate(day_of_week = wday(start_date))
+stocks_long |> mutate(day_of_week = wday(start_date,
+                                          label = TRUE, abbr = FALSE))
+
+try |>
+  
+
+
+
+```
+
+```{r}
+Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"), na = c("NA"))
+
+newnamesCM <- paste(Cape_May[3, ], Cape_May[4, ])
+
+Cape_May_2 <- Cape_May |>
+  set_names(newnamesCM) |>
+  slice(-1, -2, -3, -4, -5)
+
+###time to clean now
+# sliced out row 5 as well, it is a row of totals.
+
+Cape_may_clean <- Cape_May_2 |>
+  pivot_longer(c(6:30), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_spp)) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration)) |>
+  select(Date, everything())
+
+write.csv(Cape_may_clean, here("Data","Processed Data","CM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
+####after this point, I am doing work that should be in 'Data Exploration.qmd' but isn't because for some reason the column names have a . at the end after I export
+
+#make year, month, and julian date columns
+#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
+
+##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
+Cape_may_clean$year <- lubridate::year(Cape_may_clean$Date)
+Cape_may_clean$month <- lubridate::month(Cape_may_clean$Date)
+Cape_may_clean$julian <- lubridate::yday(Cape_may_clean$Date) 
+
+
+try <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  group_by(Date, Species) |>
+  summarise(spp_per_min = mean(total_n/duration_min_day))
+
+ggplot(data = try, aes(x = Date, y = spp_per_min)) +
+  geom_point() +
+  facet_wrap(~Species)
+
+
+##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
+
+try2 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
+  group_by(Date, Species) |>
+  mutate(spp_per_min = mean(total_n/duration_min_day))
+
+ggplot(data = try2, aes(x = julian,
+                        y = spp_per_min)) +
+  geom_line(aes(colour = year)) +
+  facet_wrap(~Species) +
+  geom_smooth()
+
+#above code: there are crazy outliers. How do I address/remove these?
+
+#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
+
+try3 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
+  group_by(Date, Species) |>
+  mutate(spp_per_min = mean(total_n/duration_min_day)) |>
+  group_by(year, month, Species) |>
+  summarise(test = mean(spp_per_min))
+           
+ggplot(data = try3, aes(x = month,
+                        y = test)) +
+  geom_() +
+  facet_wrap(~Species)
+
+##how to fix graph above?
+
+try4 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
+  filter(Species == "RT") |>
+  group_by(Date) |>
+  mutate(spp_per_min = total_n/duration_min_day)
+
+ggplot(data = try4, aes(x = julian,
+                        y = spp_per_min)) +
+  geom_point(aes(colour = year)) +
+  geom_smooth()
+
+ggplot(data = try4, aes(x = julian,
+                        y = spp_per_min)) +
+  geom_line(aes(colour = year)) +
+  geom_smooth()
+
+
+##what is the issue here (above)?
+
 ```
 trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
 
 ### Tidying the Goshutes data set
 ```{r}
-Goshute_Mtns_2 <- read.csv(here("Data", "HawkWatch Data csv", "Goshute_Mtns.csv"), na = c("NA"), skip = 3) |> slice(-(1))
+Goshute_Mtns_2 <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Goshute_Mtns.csv"), na = c("NA"), skip = 3) |> slice(-(1))
 head(Goshute_Mtns_2)
 
 #need to re-specify classes of variables. I tried to do it using col_types = cols() and spec() (col_types = cols(Date = col_factor()) but for some reason it isn't working so I am just going to modify some locally using mutate and as._____ below. I would like to come back and do it when reading in the data however, because it is just way cleaner.
 
-Gtake_1 <- Goshute_Mtns_2 |>
+G_DateAsFactor <- Goshute_Mtns_2 |>
   pivot_longer(c(6:28), names_to = "Species",
                values_to = "n_spp") |>
   filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
   mutate(Date = as.factor(Date)) |>
+  select(Date, everything()) |>
   mutate(n_spp = as.double(n_spp)) |>
   mutate(Species = as.factor(Species)) |>
   group_by(Date, Species) |>
@@ -53,56 +213,62 @@ Gtake_1 <- Goshute_Mtns_2 |>
   group_by(Date, Species) |>
   mutate(duration_min_day = sum(Duration))
 
-#because I am mutating and not summarizing, it isn't making a new df. Maybe need to keep only columns want to use and make new df to use (multiple for diff uses).
+Goshute_Mtns_clean <- Goshute_Mtns_2 |>
+  pivot_longer(c(6:28), names_to = "Species",
+               values_to = "n_spp") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(Date)) |>
+  select(Date, everything()) |>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_spp)) |>
+  mutate(Duration = as.double(Duration))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration))
 
-#need to standardize by hour somehow. perhaps by day number observed/hours observed?
-
-#answer per erika: 1) 
-
-#move spp and duration to the start of the df (reorder)
+write.csv(Goshute_Mtns_clean, here("Data","Processed Data","GM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
 
 ```
 
 
 ### Tidying Hawk Ridge
 ```{r}
-Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data csv", "Hawk_Ridge.csv"), na = c("NA"))
+Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Hawk_Ridge.csv"), na = c("NA"))
 
-newnames <- paste(Hawk_Ridge[3, ], Hawk_Ridge[4, ])
+newnamesHR <- paste(Hawk_Ridge[3, ], Hawk_Ridge[4, ])
 
 Hawk_Ridge_2 <- Hawk_Ridge |>
-  set_names(newnames) |>
+  set_names(newnamesHR) |>
   slice(-1, -2, -3, -4)
 
 ### now clean the data
   
 #take_1H <- 
 
-Hawk_Ridge_2 |>
+Hawk_Ridge_clean <- Hawk_Ridge_2 |>
   pivot_longer(c(6:87), names_to = "Species_age",
                values_to = "n_spp") |>
   separate(Species_age, c("Species", "Age"),
            sep = " ") |>
   filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
-  mutate(Date = as.factor(Date)) |>
+  mutate(Date = dmy(`Date `)) |>
+  select(Date, everything()) |>
   mutate(n_spp = as.double(n_spp)) |>
   mutate(Species = as.factor(Species)) |>
   group_by(Date, Species) |>
   mutate(total_n = sum(n_spp)) |>
-  mutate(Duration = as.double(Duration))|>
+  mutate(Duration = as.double(`Duration (min)`))|>
   group_by(Date, Species) |>
   mutate(duration_min_day = sum(Duration))
 
-#cant slice(-(1)) because in this df they split up into age classes and that row actually contains important info
-#how can i combine row 1 into column headers? I could factor_recode but it would just take a long time
-#because can't have column names that are the same, R added .x to the end of the spp codes that are repeated, x=the number of that same spp repeated as a column.
-# I can't really pivot longer until this issue is resolved because it will mess some stuff up.
-#need to have just one column per species and have a new column for age and a new column for unit
+write.csv(Hawk_Ridge_clean, here("Data","Processed Data","HR_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
 ```
 
 
 
-notes on data cleaning:
+### notes on data cleaning:
 emit row 1
 
 pivot_longer() -> make spp a column
@@ -121,5 +287,8 @@ column date
 column time
 
 standardize by hours observed/day
+
+move columns to the start of df
+make df only have columns you want.
 
 

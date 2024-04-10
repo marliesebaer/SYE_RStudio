@@ -1,0 +1,110 @@
+---
+title: "Data Exploration"
+author: "Marliese Baer"
+format: html
+editor: visual
+---
+
+## Set Up
+
+```{r}
+rm(list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(readr)
+library(lubridate)
+```
+
+## Pull in original data
+
+```{r}
+CM <- read.csv(here("Data", "Processed Data", "CM_clean.csv"))
+#GM <- read.csv(here("Data", "Processed Data", "GM_clean.csv"))
+#HR <- read.csv(here("Data", "Processed Data", "HR_clean.csv"))
+```
+
+## Cape May
+
+```{r}
+CM |>
+  mutate(Date = dmy(Date))
+|>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  mutate(Duration = as.double(`Duration (min)`)) |>
+  select(Date, Species, n_spp, total_n, duration_min_day)
+
+try |>
+  group_by(Date, Species) |>
+  summarise(spp_per_min = total_n/duration_min_day)
+
+##why multiple spp_per_min values for each date and spp?
+
+try |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  mutate(Duration = as.double(`Duration (min)`))
+
+
+
+Cape_may_clean <- Cape_May_2 |>
+  pivot_longer(c(6:30), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_spp)) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration)) |>
+  select(Date, everything())
+
+
+####after this point, I am doing work that should be in 'Data Exploration.qmd' but isn't because for some reason the date is back to a chr instead of date
+
+try <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  group_by(Date, Species) |>
+  summarise(spp_per_min = mean(total_n/duration_min_day))
+
+ggplot(data = try, aes(x = Date, y = spp_per_min)) +
+  geom_point(aes(colour = Date)) +
+  facet_wrap(~Species)
+
+try2 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  group_by(Date, Species) |>
+  mutate(spp_per_min = total_n/duration_min_day)
+
+##add to below
+
+Cape_may_clean$year <- lubridate::year(Cape_may_clean$Date)
+Cape_may_clean$month <- lubridate::month(Cape_may_clean$Date)
+Cape_may_clean$julian <- lubridate::yday(Cape_may_clean$Date) 
+
+##when I run this code separately (not as a part of a pipe), it works. Why can't work in pipe
+
+#need to convert to 3 columns: month, day, and year.
+#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
+
+##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
+
+ggplot(data = try2, aes(x = ))
+
+Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  filter(Species == "RT") |>
+  group_by(Date) |>
+  summarise(spp_per_min = total_n/duration_min_day)
+
+```
+
+## Goshutes
+
+## Hawk Ridge
