@@ -19,12 +19,91 @@ library(lubridate)
 ## Pull in original data
 
 ```{r}
-CM <- read.csv(here("Data", "Processed Data", "CM_clean.csv"))
+CM <- read_csv(here("Data", "Processed Data", "CM_clean.csv"),
+               col_types = cols(
+                 Date = col_date(),
+                 Species = col_factor(),
+                 Duration = col_double(),
+                 n_individ = col_double(),
+                 total_n = col_double(),
+                 duration_min_day = col_double(),
+                 year = col_double(),
+                 month = col_factor(),
+                 wday = col_factor(),
+                 individ_per_min = col_double(),
+                 individ_per_hour = col_double(),
+                 week = col_factor()
+               ))
 #GM <- read.csv(here("Data", "Processed Data", "GM_clean.csv"))
 #HR <- read.csv(here("Data", "Processed Data", "HR_clean.csv"))
+
 ```
 
 ## Cape May
+
+```{r}
+#make df for each species
+
+CM_RT <- CM |>
+  filter(Species == "RT")
+
+CM_SS <- CM |>
+  filter(Species == "SS")
+
+CM_CH <- CM |>
+  filter(Species == "CH")
+
+CM_PG <- CM |>
+  filter(Species == "PG")
+
+CM_AK <- CM |>
+  filter(Species == "AK")
+
+#boxplot (x = week, y = num_individ_per_week_per_hour??), connect the medians/means to see trends
+
+ggplot(data = CM_RT, aes(x = week,
+                      y = individ_per_hour)) +
+  geom_boxplot()
+
+
+#split data into 10 year periods
+
+CM_RT <- CM_RT |>
+  mutate(Decade = 
+           case_when(year >= 1976 & year <= 1985 ~ "1976 - 1985",
+                     year >= 1986 & year <= 1995 ~ "1986 - 1995",
+                     year >= 1996 & year <= 2005 ~ "1996 - 2005",
+                     year >= 2006 & year <= 2015 ~ "2006 - 2015",
+                     year >= 2016 ~ "2016 - present")) |>
+  mutate(Decade = as.factor(Decade))
+
+ggplot(data = CM_RT, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+ggplot(data = CM_RT, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_smooth(aes(colour = Decade))
+#what does geom_smooth actually do when used on its own?
+
+
+##split data into 5 year periods?
+
+#total values per year
+
+CM_RT |>
+  group_by(year) |>
+  summarise(total_n_per_year = sum(n_individ))
+
+#other exploratory plots?
+  
+```
+
+1) make plots above. consult w erika to ask about other plots??
+2) repeat cleaning process for other datasets!!!
+
+
 
 ```{r}
 CM |>

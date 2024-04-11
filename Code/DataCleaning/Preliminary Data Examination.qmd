@@ -35,33 +35,11 @@ Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"
 
 newnamesCM <- paste(Cape_May[3, ], Cape_May[4, ])
 
-Cape_May_2 <- Cape_May |>
+Cape_May <- Cape_May |>
   set_names(newnamesCM) |>
   slice(-1, -2, -3, -4, -5)
 
-try <- Cape_May_2 |>
-  pivot_longer(c(6:30), names_to = "Species_age",
-               values_to = "n_spp") |>
-  separate(Species_age, c("Species", "Age"),
-           sep = " ") |>
-  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
-  mutate(Date = dmy(`Date `)) |>
-  mutate(n_individ = as.double(n_spp)) |>
-  mutate(Species = as.factor(Species)) |>
-  group_by(Date, Species) |>
-  mutate(total_n = sum(n_individ)) |>
-  mutate(Duration = as.double(`Duration (min)`))|>
-  group_by(Date, Species) |>
-  mutate(duration_min_day = sum(Duration)) |>
-  select(Date, Species, Duration, n_individ, total_n, duration_min_day)
-
-try$year <- lubridate::year(try$Date)
-try$month <- lubridate::month(try$Date)
-try$julian <- lubridate::yday(try$Date) 
-
-### code above works!! DO NOT GET RID OF UNTIL SURE CODE BELOW WORKS!!
-
-try2 <- Cape_May_2 |>
+CM_clean <- Cape_May |>
   pivot_longer(c(6:30), names_to = "Species_age",
                values_to = "n_spp") |>
   separate(Species_age, c("Species", "Age"),
@@ -80,46 +58,17 @@ try2 <- Cape_May_2 |>
   mutate(wday = wday(Date, label = TRUE)) |>
   select(Date, Species, Duration, n_individ, total_n, duration_min_day, year, month, wday)
 
-try2 <- try2 |> 
+CM_clean <- CM_clean |> 
   group_by(Date, Species) |>
   mutate(individ_per_min = mean(total_n/duration_min_day)) |>
   mutate(individ_per_hour = individ_per_min*60) |>
   mutate(week = week(Date))
 
+write.csv(CM_clean, here("Data","Processed Data","CM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
 
 ```
 
-```{r}
-Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"), na = c("NA"))
 
-newnamesCM <- paste(Cape_May[3, ], Cape_May[4, ])
-
-Cape_May_2 <- Cape_May |>
-  set_names(newnamesCM) |>
-  slice(-1, -2, -3, -4, -5)
-
-###time to clean now
-# sliced out row 5 as well, it is a row of totals.
-
-Cape_may_clean <- Cape_May_2 |>
-  pivot_longer(c(6:30), names_to = "Species_age",
-               values_to = "n_spp") |>
-  separate(Species_age, c("Species", "Age"),
-           sep = " ") |>
-  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
-  mutate(Date = dmy(`Date `)) |>
-  mutate(n_spp = as.double(n_spp)) |>
-  mutate(Species = as.factor(Species)) |>
-  group_by(Date, Species) |>
-  mutate(total_n = sum(n_spp)) |>
-  mutate(Duration = as.double(`Duration (min)`))|>
-  group_by(Date, Species) |>
-  mutate(duration_min_day = sum(Duration)) |>
-  select(Date, everything())
-
-write.csv(Cape_may_clean, here("Data","Processed Data","CM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
-
-```
 trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
 
 ```{r}
