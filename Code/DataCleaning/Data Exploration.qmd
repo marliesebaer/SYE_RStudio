@@ -42,6 +42,31 @@ CM <- read_csv(here("Data", "Processed Data", "CM_clean.csv"),
 ## Cape May
 
 ```{r}
+## for all spp?
+
+CM <- CM |>
+  mutate(Decade = 
+           case_when(year >= 1976 & year <= 1985 ~ "1976 - 1985",
+                     year >= 1986 & year <= 1995 ~ "1986 - 1995",
+                     year >= 1996 & year <= 2005 ~ "1996 - 2005",
+                     year >= 2006 & year <= 2015 ~ "2006 - 2015",
+                     year >= 2016 ~ "2016 - present")) |>
+  mutate(Decade = as.factor(Decade)) |>
+  relocate(Decade, everything ())
+  
+#relocate() moves new variable to the front of df (be first column)
+
+ggplot(data = CM, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+
+ggplot(data = CM, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+
 #make df for each species
 
 CM_RT <- CM |>
@@ -87,6 +112,10 @@ ggplot(data = CM_RT, aes(x = week,
   geom_smooth(aes(colour = Decade))
 #what does geom_smooth actually do when used on its own?
 
+CM_RT |>
+  group_by(year) |>
+  arrange(desc(year))
+
 
 ##split data into 5 year periods?
 
@@ -99,6 +128,14 @@ CM_RT |>
 #other exploratory plots?
   
 ```
+
+to address outliers
+
+1) isolate outliers and see if reasonable
+- if an order of mag more than another point (need justification for throwing away point)
+2) want to be conservative, and bc not involved in all data collection
+- take top and bottom 3% of points and run without them to see if there is a different
+
 
 1) make plots above. consult w erika to ask about other plots??
 2) repeat cleaning process for other datasets!!!
