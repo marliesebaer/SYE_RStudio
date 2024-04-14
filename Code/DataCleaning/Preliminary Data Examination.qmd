@@ -68,6 +68,7 @@ write.csv(CM_clean, here("Data","Processed Data","CM_clean.csv"), row.names = FA
 
 ```
 
+### cape may stuff I think I can delete but am not ready to yet
 
 trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
 
@@ -181,6 +182,43 @@ Goshute_Mtns_clean <- Goshute_Mtns_2 |>
   mutate(duration_min_day = sum(Duration))
 
 write.csv(Goshute_Mtns_clean, here("Data","Processed Data","GM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
+### 
+
+Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"), na = c("NA"))
+
+newnamesCM <- paste(Cape_May[3, ], Cape_May[4, ])
+
+Cape_May <- Cape_May |>
+  set_names(newnamesCM) |>
+  slice(-1, -2, -3, -4, -5)
+
+CM_clean <- Cape_May |>
+  pivot_longer(c(6:30), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_individ = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_individ)) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration)) |>
+  mutate(year = year(Date)) |>
+  mutate(month = month(Date, label = TRUE)) |>
+  mutate(wday = wday(Date, label = TRUE)) |>
+  select(Date, Species, Duration, n_individ, total_n, duration_min_day, year, month, wday)
+
+CM_clean <- CM_clean |> 
+  group_by(Date, Species) |>
+  mutate(individ_per_min = mean(total_n/duration_min_day)) |>
+  mutate(individ_per_hour = individ_per_min*60) |>
+  mutate(week = week(Date))
+
+write.csv(CM_clean, here("Data","Processed Data","CM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
 
 ```
 
