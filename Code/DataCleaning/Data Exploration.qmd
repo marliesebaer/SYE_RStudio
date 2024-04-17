@@ -8,6 +8,8 @@ editor: visual
 ## Set Up
 
 ```{r}
+#| warning: false
+
 rm(list = ls())
 library(tidyverse)
 library(here)
@@ -34,15 +36,50 @@ CM <- read_csv(here("Data", "Processed Data", "CM_clean.csv"),
                  individ_per_hour = col_double(),
                  week = col_factor()
                ))
-#GM <- read.csv(here("Data", "Processed Data", "GM_clean.csv"))
-#HR <- read.csv(here("Data", "Processed Data", "HR_clean.csv"))
+
+GM <- read_csv(here("Data", "Processed Data", "GM_clean.csv"),
+               col_types = cols(
+                 Date = col_date(),
+                 Species = col_factor(),
+                 Duration = col_double(),
+                 n_individ = col_double(),
+                 total_n = col_double(),
+                 duration_min_day = col_double(),
+                 year = col_double(),
+                 month = col_factor(),
+                 wday = col_factor(),
+                 individ_per_min = col_double(),
+                 individ_per_hour = col_double(),
+                 week = col_factor()
+               ))
+
+
+HR <- read_csv(here("Data", "Processed Data", "HR_clean.csv"),
+               col_types = cols(
+                 Date = col_date(),
+                 Species = col_factor(),
+                 Duration = col_double(),
+                 n_individ = col_double(),
+                 total_n = col_double(),
+                 duration_min_day = col_double(),
+                 year = col_double(),
+                 month = col_factor(),
+                 wday = col_factor(),
+                 individ_per_min = col_double(),
+                 individ_per_hour = col_double(),
+                 week = col_factor()
+               ))
 
 ```
 
 ## Cape May
 
+
+### All species over time
 ```{r}
-## for all spp?
+CM |>
+  group_by(year) |>
+  arrange(desc(year))
 
 CM <- CM |>
   mutate(Decade = 
@@ -52,7 +89,17 @@ CM <- CM |>
                      year >= 2006 & year <= 2015 ~ "2006 - 2015",
                      year >= 2016 ~ "2016 - present")) |>
   mutate(Decade = as.factor(Decade)) |>
-  relocate(Decade, everything ())
+  mutate(location = "Cape May") |>
+  relocate(Decade, location, everything ())
+
+CM <- CM |>
+  group_by(year) |>
+  mutate(total_individ_per_year = sum(n_individ))
+
+CM <- CM |>
+  group_by(week) |>
+  mutate(total_individ_per_week = sum(n_individ))
+
   
 #relocate() moves new variable to the front of df (be first column)
 
@@ -66,9 +113,84 @@ ggplot(data = CM, aes(x = week,
                          y = individ_per_hour, group = Decade)) +
   geom_smooth(aes(colour = Decade)) +
   facet_wrap(~Species)
+```
 
-#make df for each species
+```{r}
+summary(CM_RT$individ_per_hour)
 
+CM |>
+  group_by(week) |>
+  summarise(try = mean(individ_per_hour)) |>
+  arrange(desc(try))
+
+finding_inf <- CM |>
+  filter(week == 41)
+
+finding_inf |>
+  arrange(desc(individ_per_hour))
+ 
+```
+
+
+make df with one row per day
+```{r}
+CM |>
+  group_by(Date)
+```
+
+
+finding odd Duration values
+```{r}
+
+table(Cape_May$`Duration (min)`)
+
+
+Cape_May$Duration<-as.numeric(Cape_May$`Duration (min)`)
+
+sort(Cape_May$Duration, decreasing = TRUE)
+
+sort(CM$Duration, decreasing = TRUE)
+
+Cape_May |>
+  filter(Duration >700)
+
+CM |>
+  filter(Duration == 705)
+
+```
+
+
+
+```{r}
+
+##try the below variables  -> if going to keep, name them better so they are more informative
+
+CM <- CM |>
+  group_by(year, Species, Decade) |>
+  mutate(total_individ_year_spp = sum(n_individ))
+
+CM <- CM |>
+  group_by(week, Species, Decade) |>
+  mutate(total_individ_week_spp = sum(n_individ))
+
+##plot
+
+ggplot(data = CM, aes(x = week, y = total_individ_week_spp, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+
+ggplot(data = CM, aes(x = year, y = total_individ_year_spp, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+
+```
+
+
+### dfs for each spp
+
+```{r}
 CM_RT <- CM |>
   filter(Species == "RT")
 
@@ -83,25 +205,72 @@ CM_PG <- CM |>
 
 CM_AK <- CM |>
   filter(Species == "AK")
+```
 
-#boxplot (x = week, y = num_individ_per_week_per_hour??), connect the medians/means to see trends
+### boxplot and dotplot for each spp individually
 
+```{r}
 ggplot(data = CM_RT, aes(x = week,
-                      y = individ_per_hour)) +
+                      y = log(individ_per_hour+1))) +
   geom_boxplot()
 
+ggplot(data = CM_RT, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
 
-#split data into 10 year periods
+##
 
-CM_RT <- CM_RT |>
-  mutate(Decade = 
-           case_when(year >= 1976 & year <= 1985 ~ "1976 - 1985",
-                     year >= 1986 & year <= 1995 ~ "1986 - 1995",
-                     year >= 1996 & year <= 2005 ~ "1996 - 2005",
-                     year >= 2006 & year <= 2015 ~ "2006 - 2015",
-                     year >= 2016 ~ "2016 - present")) |>
-  mutate(Decade = as.factor(Decade))
+ggplot(data = CM_SS, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
 
+ggplot(data = CM_SS, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = CM_CH, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = CM_CH, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = CM_AK, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = CM_AK, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = CM_PG, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = CM_PG, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+```
+
+
+### for RT
+
+boxplot (x = week, y = num_individ_per_week_per_hour??), connect the medians/means to see trends
+```{r}
+ggplot(data = CM_RT, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+```
+
+individual per hour per week by decade
+```{r}
 ggplot(data = CM_RT, aes(x = week,
                          y = individ_per_hour, group = Decade)) +
   geom_point() +
@@ -110,24 +279,29 @@ ggplot(data = CM_RT, aes(x = week,
 ggplot(data = CM_RT, aes(x = week,
                          y = individ_per_hour, group = Decade)) +
   geom_smooth(aes(colour = Decade))
+
 #what does geom_smooth actually do when used on its own?
+```
 
-CM_RT |>
-  group_by(year) |>
-  arrange(desc(year))
+Split data into 5 year periods?
+```{r}
 
+```
 
-##split data into 5 year periods?
-
-#total values per year
-
+total values per year
+```{r}
 CM_RT |>
   group_by(year) |>
   summarise(total_n_per_year = sum(n_individ))
-
-#other exploratory plots?
   
 ```
+
+other explanatory plots?
+```{r}
+
+```
+
+
 
 to address outliers
 
@@ -142,85 +316,268 @@ to address outliers
 
 
 
-```{r}
-CM |>
-  mutate(Date = dmy(Date))
-|>
-  mutate(n_spp = as.double(n_spp)) |>
-  mutate(Species = as.factor(Species)) |>
-  mutate(Duration = as.double(`Duration (min)`)) |>
-  select(Date, Species, n_spp, total_n, duration_min_day)
-
-try |>
-  group_by(Date, Species) |>
-  summarise(spp_per_min = total_n/duration_min_day)
-
-##why multiple spp_per_min values for each date and spp?
-
-try |>
-  mutate(Date = dmy(`Date `)) |>
-  mutate(n_spp = as.double(n_spp)) |>
-  mutate(Species = as.factor(Species)) |>
-  mutate(Duration = as.double(`Duration (min)`))
 
 
-
-Cape_may_clean <- Cape_May_2 |>
-  pivot_longer(c(6:30), names_to = "Species_age",
-               values_to = "n_spp") |>
-  separate(Species_age, c("Species", "Age"),
-           sep = " ") |>
-  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
-  mutate(Date = dmy(`Date `)) |>
-  mutate(n_spp = as.double(n_spp)) |>
-  mutate(Species = as.factor(Species)) |>
-  group_by(Date, Species) |>
-  mutate(total_n = sum(n_spp)) |>
-  mutate(Duration = as.double(`Duration (min)`))|>
-  group_by(Date, Species) |>
-  mutate(duration_min_day = sum(Duration)) |>
-  select(Date, everything())
-
-
-####after this point, I am doing work that should be in 'Data Exploration.qmd' but isn't because for some reason the date is back to a chr instead of date
-
-try <- Cape_may_clean |>
-  select(Date, Species, n_spp, total_n, duration_min_day) |>
-  group_by(Date, Species) |>
-  summarise(spp_per_min = mean(total_n/duration_min_day))
-
-ggplot(data = try, aes(x = Date, y = spp_per_min)) +
-  geom_point(aes(colour = Date)) +
-  facet_wrap(~Species)
-
-try2 <- Cape_may_clean |>
-  select(Date, Species, n_spp, total_n, duration_min_day) |>
-  group_by(Date, Species) |>
-  mutate(spp_per_min = total_n/duration_min_day)
-
-##add to below
-
-Cape_may_clean$year <- lubridate::year(Cape_may_clean$Date)
-Cape_may_clean$month <- lubridate::month(Cape_may_clean$Date)
-Cape_may_clean$julian <- lubridate::yday(Cape_may_clean$Date) 
-
-##when I run this code separately (not as a part of a pipe), it works. Why can't work in pipe
-
-#need to convert to 3 columns: month, day, and year.
-#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
-
-##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
-
-ggplot(data = try2, aes(x = ))
-
-Cape_may_clean |>
-  select(Date, Species, n_spp, total_n, duration_min_day) |>
-  filter(Species == "RT") |>
-  group_by(Date) |>
-  summarise(spp_per_min = total_n/duration_min_day)
-
-```
 
 ## Goshutes
 
+```{r}
+GM |>
+  group_by(year) |>
+  arrange((year))
+
+GM |>
+  group_by(year) |>
+  summarise(try = mean(year))
+
+## start 1983, end 2023
+## no 2020
+
+GM <- GM |>
+  mutate(Decade = 
+           case_when(year >= 1983 & year <= 1992 ~ "1983 - 1992",
+                     year >= 1993 & year <= 2002 ~ "1993 - 2002",
+                     year >= 2003 & year <= 2012 ~ "2003 - 2013",
+                     year >= 2013  ~ "2013 - present")) |>
+  mutate(Decade = as.factor(Decade)) |>
+  mutate(location = "Goshute Mtns") |>
+  relocate(Decade, location, everything ())
+
+GM <- GM |>
+  group_by(year) |>
+  mutate(total_individ_per_year = sum(n_individ))
+
+GM <- GM |>
+  group_by(week) |>
+  mutate(total_individ_per_week = sum(n_individ))
+  
+#relocate() moves new variable to the front of df (be first column)
+
+ggplot(data = GM, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+
+ggplot(data = GM, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+```
+### dfs for each spp
+
+```{r}
+GM_RT <- GM |>
+  filter(Species == "RT")
+
+GM_SS <- GM |>
+  filter(Species == "SS")
+
+GM_CH <- GM |>
+  filter(Species == "CH")
+
+GM_PG <- GM |>
+  filter(Species == "PG")
+
+GM_AK <- GM |>
+  filter(Species == "AK")
+```
+
+### boxplot and dotplot for each spp individually
+
+```{r}
+ggplot(data = GM_RT, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = GM_RT, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = GM_SS, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = GM_SS, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = GM_CH, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = GM_CH, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = GM_AK, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = GM_AK, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = GM_PG, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = GM_PG, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+```
+
 ## Hawk Ridge
+
+
+okay, so the plots show negative values... ??
+```{r}
+HR |>
+  group_by(year) |>
+  arrange(desc(year))
+
+HR |>
+  group_by(year) |>
+  summarise(try = mean(year))
+
+##start 1971, end 2023
+
+HR <- HR |>
+  mutate(Decade = 
+           case_when(year >= 1971 & year <= 1980 ~ "1971 - 1980",
+                     year >= 1981 & year <= 1990 ~ "1981 - 1990",
+                     year >= 1991 & year <= 2000 ~ "1991 - 2000",
+                     year >= 2001 & year <= 2010 ~ "2001 - 2010",
+                     year >= 2011 & year <= 2020 ~ "2011 - 2020",
+                     year >= 2021 ~ "2021 - present")) |>
+  mutate(Decade = as.factor(Decade)) |>
+  mutate(location = "Hawk Ridge") |>
+  relocate(Decade, location, everything ())
+
+HR <- HR |>
+  group_by(year) |>
+  mutate(total_individ_per_year = sum(n_individ))
+
+HR <- HR |>
+  group_by(week) |>
+  mutate(total_individ_per_week = sum(n_individ))
+  
+#relocate() moves new variable to the front of df (be first column)
+
+ggplot(data = HR, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+
+##consider using log transformation (refer to CM_RT boxplot graph made)
+
+ggplot(data = HR, aes(x = week,
+                         y = individ_per_hour, group = Decade)) +
+  geom_smooth(aes(colour = Decade)) +
+  facet_wrap(~Species)
+```
+
+### dfs for each spp
+
+```{r}
+HR_RT <- HR |>
+  filter(Species == "RT")
+
+HR_SS <- HR |>
+  filter(Species == "SS")
+
+HR_CH <- HR |>
+  filter(Species == "CH")
+
+HR_PG <- HR |>
+  filter(Species == "PG")
+
+HR_AK <- HR |>
+  filter(Species == "AK")
+```
+
+
+### boxplot and dotplot for each spp individually
+
+```{r}
+ggplot(data = HR_RT, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = HR_RT, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = HR_SS, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = HR_SS, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = HR_CH, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = HR_CH, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = HR_AK, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = HR_AK, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+
+##
+
+ggplot(data = HR_PG, aes(x = week,
+                      y = log(individ_per_hour+1))) +
+  geom_boxplot()
+
+ggplot(data = HR_PG, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade))
+```
+
+
+
+## removing outliers to create more accurate graphs
+
+```{r}
+
+CM <- CM |> 
+  filter(Duration > 0 & Duration < 1000)
+
+HR <- HR |> 
+  filter(Duration > 0 & Duration < 1000)
+
+GM <- GM |> 
+  filter(Duration > 0 & Duration < 1000)
+
+#keep rows where duration is greater that 0
+
+```
+
+
+
+
+

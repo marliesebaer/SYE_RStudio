@@ -53,12 +53,15 @@ CM_clean <- Cape_May |>
   group_by(Date, Species) |>
   mutate(total_n = sum(n_individ)) |>
   mutate(Duration = as.double(`Duration (min)`))|>
+  filter(Duration > 0 & Duration < 1000) |>
   group_by(Date, Species) |>
   mutate(duration_min_day = sum(Duration)) |>
   mutate(year = year(Date)) |>
   mutate(month = month(Date, label = TRUE)) |>
   mutate(wday = wday(Date, label = TRUE)) |>
   select(Date, Species, Duration, n_individ, total_n, duration_min_day, year, month, wday)
+
+##added filter(Duration > 0 & Duration < 1000) as a temporary fix to outlier problem. Will address more seriously after NENHC
 
 CM_clean <- CM_clean |> 
   group_by(Date, Species) |>
@@ -68,83 +71,6 @@ CM_clean <- CM_clean |>
 
 write.csv(CM_clean, here("Data","Processed Data","CM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
 
-```
-
-### cape may stuff I think I can delete but am not ready to yet
-
-trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
-
-```{r}
-####after this point, I am doing work that should be in 'Data Exploration.qmd' but isn't because for some reason the column names have a . at the end after I export
-
-#make year, month, and julian date columns
-#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
-
-##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
-Cape_may_clean$year <- lubridate::year(Cape_may_clean$Date)
-Cape_may_clean$month <- lubridate::month(Cape_may_clean$Date)
-Cape_may_clean$julian <- lubridate::yday(Cape_may_clean$Date) 
-
-
-try <- Cape_may_clean |>
-  select(Date, Species, n_spp, total_n, duration_min_day) |>
-  group_by(Date, Species) |>
-  summarise(spp_per_min = mean(total_n/duration_min_day))
-
-ggplot(data = try, aes(x = Date, y = spp_per_min)) +
-  geom_point() +
-  facet_wrap(~Species)
-
-
-##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
-
-try2 <- Cape_may_clean |>
-  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
-  group_by(Date, Species) |>
-  mutate(spp_per_min = mean(total_n/duration_min_day))
-
-ggplot(data = try2, aes(x = julian,
-                        y = spp_per_min)) +
-  geom_line(aes(colour = year)) +
-  facet_wrap(~Species) +
-  geom_smooth()
-
-#above code: there are crazy outliers. How do I address/remove these?
-
-#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
-
-try3 <- Cape_may_clean |>
-  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
-  group_by(Date, Species) |>
-  mutate(spp_per_min = mean(total_n/duration_min_day)) |>
-  group_by(year, month, Species) |>
-  summarise(test = mean(spp_per_min))
-           
-ggplot(data = try3, aes(x = month,
-                        y = test)) +
-  geom_() +
-  facet_wrap(~Species)
-
-##how to fix graph above?
-
-try4 <- Cape_may_clean |>
-  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
-  filter(Species == "RT") |>
-  group_by(Date) |>
-  mutate(spp_per_min = total_n/duration_min_day)
-
-ggplot(data = try4, aes(x = julian,
-                        y = spp_per_min)) +
-  geom_point(aes(colour = year)) +
-  geom_smooth()
-
-ggplot(data = try4, aes(x = julian,
-                        y = spp_per_min)) +
-  geom_line(aes(colour = year)) +
-  geom_smooth()
-
-
-##what is the issue here (above)?
 ```
 
 
@@ -164,6 +90,7 @@ GM_clean <- Goshute_Mtns_2 |>
   group_by(Date, Species) |>
   mutate(total_n = sum(n_individ)) |>
   mutate(Duration = as.double(Duration))|>
+  filter(Duration > 0 & Duration < 1000) |>
   group_by(Date, Species) |>
   mutate(duration_min_day = sum(Duration)) |>
   mutate(year = year(Date)) |>
@@ -171,6 +98,7 @@ GM_clean <- Goshute_Mtns_2 |>
   mutate(wday = wday(Date, label = TRUE)) |>
   select(Date, Species, Duration, n_individ, total_n, duration_min_day, year, month, wday)
 
+##added filter(Duration > 0 & Duration < 1000) as a temporary fix to outlier problem. Will address more seriously after NENHC
 
 GM_clean <- GM_clean |> 
   group_by(Date, Species) |>
@@ -181,6 +109,8 @@ GM_clean <- GM_clean |>
 write.csv(GM_clean, here("Data","Processed Data","GM_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
 
 ```
+
+
 ### Tidying Hawk Ridge
 ```{r}
 Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Hawk_Ridge.csv"), na = c("NA"))
@@ -206,12 +136,15 @@ HR_clean <- Hawk_Ridge |>
   group_by(Date, Species) |>
   mutate(total_n = sum(n_individ)) |>
   mutate(Duration = as.double(`Duration (min)`))|>
+  filter(Duration > 0 & Duration < 1000) |>
   group_by(Date, Species) |>
   mutate(duration_min_day = sum(Duration)) |>
   mutate(year = year(Date)) |>
   mutate(month = month(Date, label = TRUE)) |>
   mutate(wday = wday(Date, label = TRUE)) |>
   select(Date, Species, Duration, n_individ, total_n, duration_min_day, year, month, wday)
+
+##added filter(Duration > 0 & Duration < 1000) as a temporary fix to outlier problem. Will address more seriously after NENHC
 
 HR_clean <- HR_clean |> 
   group_by(Date, Species) |>
@@ -221,12 +154,11 @@ HR_clean <- HR_clean |>
 
 write.csv(HR_clean, here("Data","Processed Data","HR_clean.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
 
-
 ```
 
 
 
-### notes on data cleaning:
+## notes on data cleaning:
 emit row 1
 
 pivot_longer() -> make spp a column

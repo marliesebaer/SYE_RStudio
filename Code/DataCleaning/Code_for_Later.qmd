@@ -1,0 +1,167 @@
+---
+title: "Testing"
+author: "Marliese Baer"
+format: html
+editor: visual
+---
+
+Took the following code from data exploration where it isn't needed right now. If need it later, here it is.
+
+### Ignore below (this section) for now
+
+```{r}
+CM |>
+  mutate(Date = dmy(Date))
+|>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  mutate(Duration = as.double(`Duration (min)`)) |>
+  select(Date, Species, n_spp, total_n, duration_min_day)
+
+try |>
+  group_by(Date, Species) |>
+  summarise(spp_per_min = total_n/duration_min_day)
+
+##why multiple spp_per_min values for each date and spp?
+
+try |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  mutate(Duration = as.double(`Duration (min)`))
+
+
+
+Cape_may_clean <- Cape_May_2 |>
+  pivot_longer(c(6:30), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_spp = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_spp)) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration)) |>
+  select(Date, everything())
+
+
+####after this point, I am doing work that should be in 'Data Exploration.qmd' but isn't because for some reason the date is back to a chr instead of date
+
+try <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  group_by(Date, Species) |>
+  summarise(spp_per_min = mean(total_n/duration_min_day))
+
+ggplot(data = try, aes(x = Date, y = spp_per_min)) +
+  geom_point(aes(colour = Date)) +
+  facet_wrap(~Species)
+
+try2 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  group_by(Date, Species) |>
+  mutate(spp_per_min = total_n/duration_min_day)
+
+##add to below
+
+Cape_may_clean$year <- lubridate::year(Cape_may_clean$Date)
+Cape_may_clean$month <- lubridate::month(Cape_may_clean$Date)
+Cape_may_clean$julian <- lubridate::yday(Cape_may_clean$Date) 
+
+##when I run this code separately (not as a part of a pipe), it works. Why can't work in pipe
+
+#need to convert to 3 columns: month, day, and year.
+#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
+
+##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
+
+ggplot(data = try2, aes(x = ))
+
+Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  filter(Species == "RT") |>
+  group_by(Date) |>
+  summarise(spp_per_min = total_n/duration_min_day)
+
+```
+
+#### cape may stuff I think I can delete but am not ready to yet
+
+trying to read in the original dataset and not the one that I deleted the first few columns of because there is a much much better way to do it in R as demonstrated below. Until can figure out how to do that, moving forward with the data I can easily access.
+
+```{r}
+####after this point, I am doing work that should be in 'Data Exploration.qmd' but isn't because for some reason the column names have a . at the end after I export
+
+#make year, month, and julian date columns
+#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
+
+##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
+Cape_may_clean$year <- lubridate::year(Cape_may_clean$Date)
+Cape_may_clean$month <- lubridate::month(Cape_may_clean$Date)
+Cape_may_clean$julian <- lubridate::yday(Cape_may_clean$Date) 
+
+
+try <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day) |>
+  group_by(Date, Species) |>
+  summarise(spp_per_min = mean(total_n/duration_min_day))
+
+ggplot(data = try, aes(x = Date, y = spp_per_min)) +
+  geom_point() +
+  facet_wrap(~Species)
+
+
+##julian date = x, spp/min = y, color = year, facet = spp <- spaghetti plot?
+
+try2 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
+  group_by(Date, Species) |>
+  mutate(spp_per_min = mean(total_n/duration_min_day))
+
+ggplot(data = try2, aes(x = julian,
+                        y = spp_per_min)) +
+  geom_line(aes(colour = year)) +
+  facet_wrap(~Species) +
+  geom_smooth()
+
+#above code: there are crazy outliers. How do I address/remove these?
+
+#plot per spp, spp_per_min for each month and year - so group by year and then plot x = month and y = spp_per_min
+
+try3 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
+  group_by(Date, Species) |>
+  mutate(spp_per_min = mean(total_n/duration_min_day)) |>
+  group_by(year, month, Species) |>
+  summarise(test = mean(spp_per_min))
+           
+ggplot(data = try3, aes(x = month,
+                        y = test)) +
+  geom_() +
+  facet_wrap(~Species)
+
+##how to fix graph above?
+
+try4 <- Cape_may_clean |>
+  select(Date, Species, n_spp, total_n, duration_min_day, month, year, julian) |>
+  filter(Species == "RT") |>
+  group_by(Date) |>
+  mutate(spp_per_min = total_n/duration_min_day)
+
+ggplot(data = try4, aes(x = julian,
+                        y = spp_per_min)) +
+  geom_point(aes(colour = year)) +
+  geom_smooth()
+
+ggplot(data = try4, aes(x = julian,
+                        y = spp_per_min)) +
+  geom_line(aes(colour = year)) +
+  geom_smooth()
+
+
+##what is the issue here (above)?
+```
+
