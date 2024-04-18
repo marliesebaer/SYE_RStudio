@@ -74,8 +74,8 @@ HR <- read_csv(here("Data", "Processed Data", "HR_clean.csv"),
 
 ## Cape May
 
-
 ### All species over time
+
 ```{r}
 CM |>
   group_by(year) |>
@@ -115,6 +115,9 @@ ggplot(data = CM, aes(x = week,
   facet_wrap(~Species)
 ```
 
+
+### need to skip this right now
+
 ```{r}
 summary(CM_RT$individ_per_hour)
 
@@ -131,15 +134,15 @@ finding_inf |>
  
 ```
 
-
 make df with one row per day
+
 ```{r}
 CM |>
   group_by(Date)
 ```
 
-
 finding odd Duration values
+
 ```{r}
 
 table(Cape_May$`Duration (min)`)
@@ -158,8 +161,6 @@ CM |>
   filter(Duration == 705)
 
 ```
-
-
 
 ```{r}
 
@@ -187,7 +188,6 @@ ggplot(data = CM, aes(x = year, y = total_individ_year_spp, group = Decade)) +
 
 ```
 
-
 ### dfs for each spp
 
 ```{r}
@@ -207,6 +207,61 @@ CM_AK <- CM |>
   filter(Species == "AK")
 ```
 
+### NENHC figures
+
+```{r}
+plot_CM_RT <- ggplot(data = CM_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "RTHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_SS <- ggplot(data = CM_SS, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "SSHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_CH <- ggplot(data = CM_CH, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "COHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_AK <- ggplot(data = CM_AK, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "AMKE observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_PG <- ggplot(data = CM_PG, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  labs(y = "PEFA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+
+```
+
+
+Now that we have two plots, let's use a package called ggpubr that helps you to easily arrange the plots into a multi-panel figure. We'll call our object "fig1".
+
+```{r}
+library(ggpubr) #turns on the package we need. I usually have this code at the top of my page
+
+CM_fig1 <- ggarrange(plot_CM_RT, plot_CM_SS, plot_CM_CH, plot_CM_AK, plot_CM_PG,
+          labels = "Cape May Fall Raptor Migration Observation over Time",
+          vjust = 0,
+          ncol = 3, nrow = 2,
+          legend = "bottom", common.legend = TRUE) 
+
+ggsave(here("Outputs", "CM_fig1.png"), device = "png", height = 8, width = 13) 
+
+```
+
+
+
+
 ### boxplot and dotplot for each spp individually
 
 ```{r}
@@ -214,8 +269,13 @@ ggplot(data = CM_RT, aes(x = week,
                       y = log(individ_per_hour+1))) +
   geom_boxplot()
 
-ggplot(data = CM_RT, aes(x = week, y = individ_per_hour, group = Decade)) +
+ggplot(data = CM_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "RTHA observed per hour effort") +
+  theme_minimal()
+
+ggplot(data = CM_RT, aes(x = week, y = individ_per_hour, group = Decade)) +
   geom_smooth(aes(colour = Decade))
 
 ##
@@ -259,10 +319,10 @@ ggplot(data = CM_PG, aes(x = week, y = individ_per_hour, group = Decade)) +
   geom_smooth(aes(colour = Decade))
 ```
 
-
 ### for RT
 
 boxplot (x = week, y = num_individ_per_week_per_hour??), connect the medians/means to see trends
+
 ```{r}
 ggplot(data = CM_RT, aes(x = week,
                       y = log(individ_per_hour+1))) +
@@ -270,6 +330,7 @@ ggplot(data = CM_RT, aes(x = week,
 ```
 
 individual per hour per week by decade
+
 ```{r}
 ggplot(data = CM_RT, aes(x = week,
                          y = individ_per_hour, group = Decade)) +
@@ -284,11 +345,13 @@ ggplot(data = CM_RT, aes(x = week,
 ```
 
 Split data into 5 year periods?
+
 ```{r}
 
 ```
 
 total values per year
+
 ```{r}
 CM_RT |>
   group_by(year) |>
@@ -297,27 +360,23 @@ CM_RT |>
 ```
 
 other explanatory plots?
+
 ```{r}
 
 ```
 
-
-
 to address outliers
 
-1) isolate outliers and see if reasonable
-- if an order of mag more than another point (need justification for throwing away point)
-2) want to be conservative, and bc not involved in all data collection
-- take top and bottom 3% of points and run without them to see if there is a different
+1)  isolate outliers and see if reasonable
 
+-   if an order of mag more than another point (need justification for throwing away point)
 
-1) make plots above. consult w erika to ask about other plots??
-2) repeat cleaning process for other datasets!!!
+2)  want to be conservative, and bc not involved in all data collection
 
+-   take top and bottom 3% of points and run without them to see if there is a different
 
-
-
-
+1)  make plots above. consult w erika to ask about other plots??
+2)  repeat cleaning process for other datasets!!!
 
 ## Goshutes
 
@@ -364,6 +423,7 @@ ggplot(data = GM, aes(x = week,
   geom_smooth(aes(colour = Decade)) +
   facet_wrap(~Species)
 ```
+
 ### dfs for each spp
 
 ```{r}
@@ -382,6 +442,59 @@ GM_PG <- GM |>
 GM_AK <- GM |>
   filter(Species == "AK")
 ```
+
+### NENHC figures
+
+```{r}
+plot_GM_RT <- ggplot(data = GM_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "RTHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_GM_SS <- ggplot(data = GM_SS, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "SSHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_GM_CH <- ggplot(data = GM_CH, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "COHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_GM_AK <- ggplot(data = GM_AK, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "AMKE observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_GM_PG <- ggplot(data = GM_PG, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  labs(y = "PEFA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+
+```
+
+
+Now that we have two plots, let's use a package called ggpubr that helps you to easily arrange the plots into a multi-panel figure. We'll call our object "fig1".
+
+```{r}
+library(ggpubr) #turns on the package we need. I usually have this code at the top of my page
+
+GM_fig1 <- ggarrange(plot_GM_RT, plot_GM_SS, plot_GM_CH, plot_GM_AK, plot_GM_PG,
+          labels = "Cape May Fall Raptor Migration Observation over Time",
+          vjust = 0,
+          ncol = 3, nrow = 2,
+          legend = "bottom", common.legend = TRUE) 
+
+ggsave(here("Outputs", "GM_fig1.png"), device = "png", height = 8, width = 13) 
+
+```
+
 
 ### boxplot and dotplot for each spp individually
 
@@ -437,8 +550,8 @@ ggplot(data = GM_PG, aes(x = week, y = individ_per_hour, group = Decade)) +
 
 ## Hawk Ridge
 
-
 okay, so the plots show negative values... ??
+
 ```{r}
 HR |>
   group_by(year) |>
@@ -505,6 +618,59 @@ HR_AK <- HR |>
   filter(Species == "AK")
 ```
 
+### NENHC figures
+
+```{r}
+plot_CM_RT <- ggplot(data = CM_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "RTHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_SS <- ggplot(data = CM_SS, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "SSHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_CH <- ggplot(data = CM_CH, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "COHA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_AK <- ggplot(data = CM_AK, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  labs(y = "AMKE observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+plot_CM_PG <- ggplot(data = CM_PG, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+  geom_point() +
+  geom_smooth(aes(colour = Decade)) +
+  labs(y = "PEFA observed per hour effort") +
+  theme(panel.background = element_rect(fill = 'lightgrey'))
+
+
+```
+
+
+Now that we have two plots, let's use a package called ggpubr that helps you to easily arrange the plots into a multi-panel figure. We'll call our object "fig1".
+
+```{r}
+library(ggpubr) #turns on the package we need. I usually have this code at the top of my page
+
+CM_fig1 <- ggarrange(plot_CM_RT, plot_CM_SS, plot_CM_CH, plot_CM_AK, plot_CM_PG,
+          labels = "Cape May Fall Raptor Migration Observation over Time",
+          vjust = 0,
+          ncol = 3, nrow = 2,
+          legend = "bottom", common.legend = TRUE) 
+
+ggsave(here("Outputs", "CM_fig1.png"), device = "png", height = 8, width = 13) 
+
+```
+
+
 
 ### boxplot and dotplot for each spp individually
 
@@ -516,6 +682,9 @@ ggplot(data = HR_RT, aes(x = week,
 ggplot(data = HR_RT, aes(x = week, y = individ_per_hour, group = Decade)) +
   geom_point() +
   geom_smooth(aes(colour = Decade))
+
+ggplot(data = HR_RT, aes(x = week, y = individ_per_hour, group = Decade)) +
+  geom_smooth(aes(x = week, yend = 0, y = individ_per_hour, colour = Decade))
 
 ##
 
@@ -558,8 +727,6 @@ ggplot(data = HR_PG, aes(x = week, y = individ_per_hour, group = Decade)) +
   geom_smooth(aes(colour = Decade))
 ```
 
-
-
 ## removing outliers to create more accurate graphs
 
 ```{r}
@@ -576,8 +743,3 @@ GM <- GM |>
 #keep rows where duration is greater that 0
 
 ```
-
-
-
-
-
