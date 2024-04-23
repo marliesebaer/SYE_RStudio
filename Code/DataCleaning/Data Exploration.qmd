@@ -212,33 +212,48 @@ CM_AK <- CM |>
 ```{r}
 plot_CM_RT <- ggplot(data = CM_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "RTHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_CM_SS <- ggplot(data = CM_SS, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "SSHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_CM_CH <- ggplot(data = CM_CH, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "COHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey'))  +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_CM_AK <- ggplot(data = CM_AK, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "AMKE observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey'))  +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_CM_PG <- ggplot(data = CM_PG, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade)) +
+  geom_smooth(aes(colour = Decade), size = 2) +
   labs(y = "PEFA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey'))  +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 
 ```
@@ -448,33 +463,48 @@ GM_AK <- GM |>
 ```{r}
 plot_GM_RT <- ggplot(data = GM_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "RTHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_GM_SS <- ggplot(data = GM_SS, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "SSHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_GM_CH <- ggplot(data = GM_CH, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "COHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_GM_AK <- ggplot(data = GM_AK, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "AMKE observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 plot_GM_PG <- ggplot(data = GM_PG, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade)) +
+  geom_smooth(aes(colour = Decade), size = 2) +
   labs(y = "PEFA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 
 ```
@@ -486,7 +516,7 @@ Now that we have two plots, let's use a package called ggpubr that helps you to 
 library(ggpubr) #turns on the package we need. I usually have this code at the top of my page
 
 GM_fig1 <- ggarrange(plot_GM_RT, plot_GM_SS, plot_GM_CH, plot_GM_AK, plot_GM_PG,
-          labels = "Cape May Fall Raptor Migration Observation over Time",
+          labels = "Goshute Mtns Fall Raptor Migration Observation over Time",
           vjust = 0,
           ncol = 3, nrow = 2,
           legend = "bottom", common.legend = TRUE) 
@@ -621,35 +651,50 @@ HR_AK <- HR |>
 ### NENHC figures
 
 ```{r}
-plot_CM_RT <- ggplot(data = CM_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+plot_HR_RT <- ggplot(data = HR_RT, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "RTHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
-plot_CM_SS <- ggplot(data = CM_SS, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+plot_HR_SS <- ggplot(data = HR_SS, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "SSHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
-plot_CM_CH <- ggplot(data = CM_CH, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+plot_HR_CH <- ggplot(data = HR_CH, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "COHA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
-plot_CM_AK <- ggplot(data = CM_AK, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+plot_HR_AK <- ggplot(data = HR_AK, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade), show.legend = FALSE) +
+  geom_smooth(aes(colour = Decade), show.legend = FALSE, size = 2) +
   labs(y = "AMKE observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
-plot_CM_PG <- ggplot(data = CM_PG, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
+plot_HR_PG <- ggplot(data = HR_PG, aes(x = week, y = log(individ_per_hour+1), group = Decade)) +
   geom_point() +
-  geom_smooth(aes(colour = Decade)) +
+  geom_smooth(aes(colour = Decade), size = 2) +
   labs(y = "PEFA observed per hour effort") +
-  theme(panel.background = element_rect(fill = 'lightgrey'))
+  theme(panel.background = element_rect(fill = 'lightgrey')) +
+  theme(axis.title = element_text(size = 24)) +   
+  theme(axis.text = element_text(size = 18)) +
+  theme_bw()
 
 
 ```
@@ -660,13 +705,13 @@ Now that we have two plots, let's use a package called ggpubr that helps you to 
 ```{r}
 library(ggpubr) #turns on the package we need. I usually have this code at the top of my page
 
-CM_fig1 <- ggarrange(plot_CM_RT, plot_CM_SS, plot_CM_CH, plot_CM_AK, plot_CM_PG,
-          labels = "Cape May Fall Raptor Migration Observation over Time",
+HR_fig1 <- ggarrange(plot_HR_RT, plot_HR_SS, plot_HR_CH, plot_HR_AK, plot_HR_PG,
+          labels = "Hawk Ridge Fall Raptor Migration Observation over Time",
           vjust = 0,
           ncol = 3, nrow = 2,
           legend = "bottom", common.legend = TRUE) 
 
-ggsave(here("Outputs", "CM_fig1.png"), device = "png", height = 8, width = 13) 
+ggsave(here("Outputs", "HR_fig1.png"), device = "png", height = 8, width = 13) 
 
 ```
 

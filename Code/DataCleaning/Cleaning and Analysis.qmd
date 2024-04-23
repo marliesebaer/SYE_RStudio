@@ -1,0 +1,77 @@
+---
+title: "Cleaning and Analysis"
+author: "Marliese Baer"
+format: html
+editor: visual
+---
+
+## Set Up
+```{r}
+#| warning: false
+
+rm(list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(readr)
+library(lubridate)
+```
+
+
+## Cape May
+```{r}
+Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"), na = c("NA"))
+
+newnamesCM <- paste(Cape_May[3, ], Cape_May[4, ])
+
+Cape_May1 <- Cape_May |>
+  set_names(newnamesCM) |>
+  slice(-1, -2, -3, -4, -5, -40477, -40478, -40479, -40480) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  filter(Duration > 0)
+
+write.csv(Cape_May1, here("Data","Processed Data","Cape_May1.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
+##above code eliminates rows that are totals (that I know of), and eliminates any potential duration = 0 issues
+
+Cape_May |>
+  pivot_longer(c(6:30), names_to = "Species_age",
+               values_to = "n_spp") |>
+  separate(Species_age, c("Species", "Age"),
+           sep = " ") |>
+  filter(Species == "RT" | Species == "SS" | Species == "CH" | Species == "AK" | Species == "PG") |>
+  mutate(Date = dmy(`Date `)) |>
+  mutate(n_individ = as.double(n_spp)) |>
+  mutate(Species = as.factor(Species)) |>
+  group_by(Date, Species) |>
+  mutate(total_n = sum(n_individ)) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  filter(Duration > 0 & Duration < 1000) |>
+  group_by(Date, Species) |>
+  mutate(duration_min_day = sum(Duration)) |>
+  mutate(year = year(Date)) |>
+  mutate(month = month(Date, label = TRUE)) |>
+  mutate(wday = wday(Date, label = TRUE)) |>
+  select(Date, Species, Duration, n_individ, total_n, duration_min_day, year, month, wday)
+
+##added filter(Duration > 0 & Duration < 1000) as a temporary fix to outlier problem. Will address more seriously after NENHC
+
+CM_clean <- CM_clean |> 
+  group_by(Date, Species) |>
+  mutate(individ_per_min = mean(total_n/duration_min_day)) |>
+  mutate(individ_per_hour = individ_per_min*60) |>
+  mutate(week = week(Date))
+
+
+CM_clean |>
+  select(Date, Species, total_n, duration_min_day, year, month, wday, individ_per_hour, week) |>
+  group_by(Date, Species) |>
+  mutate(location = "Cape May")
+  
+```
+
+
+
+
+
+

@@ -1,0 +1,282 @@
+---
+title: "NENHC"
+author: "Marliese Baer"
+format: html
+editor: visual
+---
+
+## Set Up
+
+```{r}
+#| warning: false
+
+rm(list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(readr)
+library(lubridate)
+library(vtable)
+library(pander)
+```
+
+## Pull in original data
+
+```{r}
+CM <- read_csv(here("Data", "Processed Data", "CM_clean.csv"),
+               col_types = cols(
+                 Date = col_date(),
+                 Species = col_factor(),
+                 Duration = col_double(),
+                 n_individ = col_double(),
+                 total_n = col_double(),
+                 duration_min_day = col_double(),
+                 year = col_double(),
+                 month = col_factor(),
+                 wday = col_factor(),
+                 individ_per_min = col_double(),
+                 individ_per_hour = col_double(),
+                 week = col_factor()
+               ))
+
+GM <- read_csv(here("Data", "Processed Data", "GM_clean.csv"),
+               col_types = cols(
+                 Date = col_date(),
+                 Species = col_factor(),
+                 Duration = col_double(),
+                 n_individ = col_double(),
+                 total_n = col_double(),
+                 duration_min_day = col_double(),
+                 year = col_double(),
+                 month = col_factor(),
+                 wday = col_factor(),
+                 individ_per_min = col_double(),
+                 individ_per_hour = col_double(),
+                 week = col_factor()
+               ))
+
+
+HR <- read_csv(here("Data", "Processed Data", "HR_clean.csv"),
+               col_types = cols(
+                 Date = col_date(),
+                 Species = col_factor(),
+                 Duration = col_double(),
+                 n_individ = col_double(),
+                 total_n = col_double(),
+                 duration_min_day = col_double(),
+                 year = col_double(),
+                 month = col_factor(),
+                 wday = col_factor(),
+                 individ_per_min = col_double(),
+                 individ_per_hour = col_double(),
+                 week = col_factor()
+               ))
+
+```
+
+
+## make individ_per_day
+```{r}
+CM <- CM |> 
+  mutate(individ_per_day = individ_per_min*720) 
+
+GM <- GM |> 
+  mutate(individ_per_day = individ_per_min*720)
+
+HR <- HR |> 
+  mutate(individ_per_day = individ_per_min*720)
+
+```
+
+
+## summary stats
+
+```{r}
+##Cape May
+
+CM_n_dist <- CM |>
+  group_by(Species) |>
+  summarise(min_observed = min(individ_per_day),
+            max_observed = max(individ_per_day),
+            mean_observed = mean(individ_per_day),
+            median_observed = median(individ_per_day)) |>
+  mutate(location = "Cape May") |>
+  relocate(location, everything())
+
+CM_time <- CM |> 
+  summarise(first_year = min(year),
+            last_year = max(year),
+            min_observation_time = min(duration_min_day),
+            max_observation_time = max(duration_min_day)) |>
+  mutate(location = "Cape May") |>
+  relocate(location, everything())
+
+## Goshutes
+
+GM_n_dist <- GM |>
+  group_by(Species) |>
+  summarise(min_observed = min(individ_per_day),
+            max_observed = max(individ_per_day),
+            mean_observed = mean(individ_per_day),
+            median_observed = median(individ_per_day)) |>
+  mutate(location = "Goshute Mountains") |>
+  relocate(location, everything())
+
+GM_time <- GM |> 
+  summarise(first_year = min(year),
+            last_year = max(year),
+            min_observation_time = min(duration_min_day),
+            max_observation_time = max(duration_min_day)) |>
+  mutate(location = "Goshute Mountains") |>
+  relocate(location, everything())
+
+## Hawk Ridge
+
+HR_n_dist <- HR |>
+  group_by(Species) |>
+  summarise(min_observed = min(individ_per_day),
+            max_observed = max(individ_per_day),
+            mean_observed = mean(individ_per_day),
+            median_observed = median(individ_per_day)) |>
+  mutate(location = "Hawk Ridge") |>
+  relocate(location, everything())
+
+HR_time <- HR |> 
+  summarise(first_year = min(year),
+            last_year = max(year),
+            min_observation_time = min(duration_min_day),
+            max_observation_time = max(duration_min_day)) |>
+  mutate(location = "Hawk Ridge") |>
+  relocate(location, everything())
+
+## Combine all together
+
+CM_GM <- full_join(CM_n_dist, GM_n_dist, join_by(Species == Species, location == location, min_observed == min_observed, max_observed == max_observed, mean_observed == mean_observed, median_observed == median_observed))
+
+CM_GM_HR <- full_join(CM_GM, HR_n_dist, join_by(Species == Species, location == location, min_observed == min_observed, max_observed == max_observed, mean_observed == mean_observed, median_observed == median_observed))
+
+##there are some issues with the results table below showing problems within data that lock and I talked about a bit... weird and innacurate observation time values. Ignore it for now, and just exclude it from ur poster
+
+CM_GM_time <- full_join(CM_time, GM_time, join_by(location == location, first_year == first_year, last_year == last_year, min_observation_time == min_observation_time, max_observation_time == max_observation_time))
+
+CM_GM_HR_time <- full_join(CM_GM_time, HR_time, join_by(location == location, first_year == first_year, last_year == last_year, min_observation_time == min_observation_time, max_observation_time == max_observation_time))
+
+##save as csv
+
+write.csv(CM_GM_HR, here("Outputs", "CM_GM_HR.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
+## pander/kable
+
+library(webshot2)
+
+#CM_GM_HR_kable <- 
+CM_GM_HR |> kable()
+
+save_kable()
+
+save_kable(CM_GM_HR_kable, file = here("Data", "Outputs", "CM_GM_HR_kable.jpeg"),
+            bs_theme = "simplex")
+
+
+here("Data","Processed Data","CM_clean.csv")
+save_kable(file = "table_2.png",
+             zoom = 1.5)
+
+## export
+
+write.table(CM_GM_HR)
+
+
+
+```
+
+
+## first and last date table
+```{r}
+CM_date <- CM |> 
+  summarise(first_year = min(year),
+            last_year = max(year)) |>
+  mutate(location = "Cape May") |>
+  relocate(location, everything())
+
+GM_date <- GM |> 
+  summarise(first_year = min(year),
+            last_year = max(year)) |>
+  mutate(location = "Goshute Mountains") |>
+  relocate(location, everything())
+
+HR_date <- HR |> 
+  summarise(first_year = min(year),
+            last_year = max(year)) |>
+  mutate(location = "Hawk Ridge") |>
+  relocate(location, everything())
+
+##
+
+CM_GM_date <- full_join(CM_date, GM_date, join_by(location == location, first_year == first_year, last_year == last_year))
+
+CM_GM_HR_date <- full_join(CM_GM_date, HR_date, join_by(location == location, first_year == first_year, last_year == last_year))
+
+##save as csv
+
+write.csv(CM_GM_HR_date, here("Outputs", "CM_GM_HR_date.csv"), row.names = FALSE)
+
+```
+
+
+
+
+```{r}
+CM |>
+  group_by(Species) |>
+  mutate(min_observed = min(individ_per_day))|>
+  mutate(max_observed = max(individ_per_day)) |>
+  mutate(mean_observed = mean(individ_per_day)) |>
+  mutate(median_observed = median(individ_per_day)) |>
+  select(Species, Date, min_observed, max_observed, mean_observed, median_observed)
+
+CM_min_max_yr<- CM |>
+  summarise(first_year = min(year),
+            last_year = max(year))
+
+
+CM_obs_time <- CM |>
+  group_by(year) |>
+  summarise(min_observation_time = min(duration_min_day),
+            max_observation_time = max(duration_min_day)) |>
+  mutate(location = "Cape May")
+
+
+CM |>
+  filter(duration_min_day == 1431)
+
+###
+
+sumtable(CM_sum_stat,
+         summ = c('notNA(x)',
+                'mean(x)',
+                'median(x)',
+                'min(x)',
+                'max(x)',
+                'propNA(x)'))
+
+sumtable(iris,
+         summ=c('notNA(x)',
+                'mean(x)',
+                'median(x)',
+                'propNA(x)'))
+
+###
+
+CM_sum_stat <- CM |>
+  select(individ_per_day, year, duration_min_day, individ_per_hour)
+
+sum_take1 <- summary(CM_sum_stat)
+
+sum_take1 |> kable()
+sum_take1 |> pander()
+
+```
+
+
+
