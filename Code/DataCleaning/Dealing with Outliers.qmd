@@ -1,0 +1,76 @@
+---
+title: "Dealing with Outliers"
+author: "Marliese Baer"
+format: html
+editor: visual
+---
+
+## Set Up
+```{r}
+#| warning: false
+
+rm(list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(readr)
+library(lubridate)
+```
+
+
+## Cape May
+
+dealing with outliers
+```{r}
+Cape_May <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Cape_May.csv"), na = c("NA"))
+
+newnamesCM <- paste(Cape_May[3, ], Cape_May[4, ])
+
+Cape_May1 <- Cape_May |>
+  set_names(newnamesCM) |>
+  slice(-1, -2, -3, -4, -5, -40477, -40478, -40479, -40480) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  filter(Duration > 0)
+
+write.csv(Cape_May1, here("Data","Processed Data","Cape_May1.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
+##above code eliminates rows that are totals (that I know of), and eliminates any potential duration = 0 issues
+```
+
+
+## Hawk Ridge
+
+dealing with outliers
+```{r}
+Hawk_Ridge <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Hawk_Ridge.csv"), na = c("NA"))
+
+newnamesHR <- paste(Hawk_Ridge[3, ], Hawk_Ridge[4, ])
+
+Hawk_Ridge1 <- Hawk_Ridge |>
+  set_names(newnamesHR) |>
+  slice(-1, -2, -3, -4, -36241, -36242, -36243, -36244) |>
+  mutate(Duration = as.double(`Duration (min)`))|>
+  filter(Duration > 0)
+
+write.csv(Hawk_Ridge1, here("Data","Processed Data","HawkRidge1.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
+##above code eliminates rows that are totals (that I know of), and eliminates any potential duration = 0 issues
+```
+
+## Goshute Mtns
+
+dealing with outliers
+```{r}
+
+Goshute_Mtns_2 <- read.csv(here("Data", "HawkWatch Data Uncleaned csv", "Goshute_Mtns.csv"), na = c("NA"), skip = 3) |> slice(-(1))
+
+Goshute_Mtns1 <- Goshute_Mtns_2 |>
+  slice(-28031, -28032, -28033, -28034) |>
+  mutate(Duration = as.double(Duration))|>
+  filter(Duration > 0)
+
+write.csv(Goshute_Mtns1, here("Data","Processed Data","Goshute_Mtns1.csv"), row.names = FALSE) #row.names=FALSE means please don't make X column where it has numbered the rows
+
+##above code eliminates rows that are totals (that I know of), and eliminates any potential duration = 0 issues
+```
+

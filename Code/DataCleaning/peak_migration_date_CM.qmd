@@ -1,0 +1,487 @@
+---
+title: "Erika's Code"
+format: html
+editor: visual
+---
+
+# finding peak migration date per year per species
+
+## Cape May
+
+set up
+
+```{r}
+rm(list = ls())
+library(lubridate)
+library(here)
+library(tidyverse)
+```
+
+```{r}
+#DF <-read.csv(here("Data", "Cape_May1.csv"))
+
+DF <- read.csv(here("Data", "Processed Data", "Cape_May1.csv"), na = c("NA"))
+```
+
+Now get 1 row per day
+
+```{r}
+DF$Date. <-dmy(DF$Date)
+```
+
+Now go
+
+```{r}
+DF <- DF %>% group_by(Date.) %>% summarise(
+  obs_min_per_day = sum(Duration..min.),
+  AK_per_day = sum(AK.All),
+  RT_per_day = sum(RT.All),
+  PG_per_day = sum(PG.All),
+  CH_per_day = sum(CH.All),
+  SS_per_day = sum(SS.All)
+)
+
+```
+Now make julian date
+
+```{r}
+DF$Day<- yday(DF$Date.)
+```
+
+Now make long
+
+```{r}
+DFL <- DF %>% pivot_longer(AK_per_day:SS_per_day,names_to = "Species", values_to = "obs_per_day")
+```
+
+Now we need to know the date each year on which the max number of observations was determined
+
+Loop? There is probabaly an easier way, but we'll go with this for now.
+
+Let's find out a few things. First, how many years in the data?
+
+```{r}
+DFL$Year <- year(DFL$Date.)
+num_years <- length(unique(DFL$Year))
+years <- unique(DFL$Year)
+```
+
+Create data frame for results
+
+```{r}
+MaxDay <-data.frame(Date = character(),
+                    obs_min_per_day = integer(),
+                    Day = numeric(),
+                    Species = character(),
+                    obs_per_day = integer(),
+                    Year = numeric(),
+                    stringsAsFactors = FALSE)
+```
+Grab the species names
+
+```{r}
+my_species <- unique(DFL$Species)
+num_rows <- length(my_species)*num_years #gives total number of rows of output for output data frame
+```
+Can I do this by doing a group_by and summarise for DFL? Lets try:
+
+```{r}
+DFL_summary <- DFL %>% group_by(Year, Species) %>% summarise(
+  max_obs_per_day = max(obs_per_day)
+)
+```
+
+Now build the loop. There are 5 species, and we need to step through each species for each year
+```{r}
+for (i in 1:num_rows){
+  data <- DFL |> filter(Year == years[i]) #grab just the data for the first year
+    for (z in 1:5){
+      mydata <- data %>% filter(Species == my_species[z]) #subsets to just the first species
+      myrow <- mydata %>% slice(which.max(obs_per_day))
+      MaxDay <- rbind(MaxDay, myrow)
+    }
+}
+```
+Now scale birds/min_of_obs and set days past sept 1
+```{r}
+
+Sept1 <- ymd("1990-09-01")
+Sept1 <- yday(Sept1)
+MaxDay <- MaxDay %>% mutate(
+  birds_per_hour_effort = (obs_per_day/obs_min_per_day)*60,
+  days_past_sept_1 = Day - Sept1
+)
+
+## Does this mean that every day will be counted from 1990-09-01? Each year's Sept 1st needs to be "01".
+
+MaxDay |>
+  arrange(desc(days_past_sept_1)) |>
+  relocate(days_past_sept_1, everything())
+```
+Now go wide format
+
+```{r}
+MaxDayW <- MaxDay %>% pivot_wider(names_from = Species, values_from = birds_per_hour_effort)
+
+MaxDayW |>
+  arrange(Date.)
+```
+
+Look at some plots
+
+```{r}
+ggplot(MaxDay, aes(Year, days_past_sept_1, color = Species))+
+  geom_line()+
+  geom_point()+
+  facet_grid(~Species)
+```
+
+```{r}
+ggplot(MaxDay, aes(Year, Day, group = Species, color = Species))+
+  geom_point()+
+  geom_line() +
+  geom_smooth(aes(group = Species))
+```
+
+```{r}
+ggplot(data = MaxDay, aes(x = Year, 
+                          y = days_past_sept_1, 
+                          group = Species, color = Species))+
+  geom_point()+
+  geom_line() +
+  geom_smooth(aes(group = Species))
+```
+
+
+## Hawk Ridge
+
+set up
+
+```{r}
+rm(list = ls())
+library(lubridate)
+library(here)
+library(tidyverse)
+```
+
+```{r}
+#DF <-read.csv(here("Data", "Cape_May1.csv"))
+
+DF <- read.csv(here("Data", "Processed Data", "HawkRidge1.csv"), na = c("NA"))
+```
+
+Now get 1 row per day
+
+```{r}
+DF$Date. <-dmy(DF$Date)
+```
+
+Now go
+
+```{r}
+DF <- DF %>% group_by(Date.) %>% summarise(
+  obs_min_per_day = sum(Duration..min.),
+  AK_per_day = sum(AK.All),
+  RT_per_day = sum(RT.All),
+  PG_per_day = sum(PG.All),
+  CH_per_day = sum(CH.All),
+  SS_per_day = sum(SS.All)
+)
+
+```
+Now make julian date
+
+```{r}
+DF$Day<- yday(DF$Date.)
+```
+
+Now make long
+
+```{r}
+DFL <- DF %>% pivot_longer(AK_per_day:SS_per_day,names_to = "Species", values_to = "obs_per_day")
+```
+
+Now we need to know the date each year on which the max number of observations was determined
+
+Loop? There is probabaly an easier way, but we'll go with this for now.
+
+Let's find out a few things. First, how many years in the data?
+
+```{r}
+DFL$Year <- year(DFL$Date.)
+num_years <- length(unique(DFL$Year))
+years <- unique(DFL$Year)
+```
+
+Create data frame for results
+
+```{r}
+MaxDay <-data.frame(Date = character(),
+                    obs_min_per_day = integer(),
+                    Day = numeric(),
+                    Species = character(),
+                    obs_per_day = integer(),
+                    Year = numeric(),
+                    stringsAsFactors = FALSE)
+```
+Grab the species names
+
+```{r}
+my_species <- unique(DFL$Species)
+num_rows <- length(my_species)*num_years #gives total number of rows of output for output data frame
+```
+Can I do this by doing a group_by and summarise for DFL? Lets try:
+
+```{r}
+DFL_summary <- DFL %>% group_by(Year, Species) %>% summarise(
+  max_obs_per_day = max(obs_per_day)
+)
+```
+
+Now build the loop. There are 5 species, and we need to step through each species for each year
+```{r}
+for (i in 1:num_rows){
+  data <- DFL |> filter(Year == years[i]) #grab just the data for the first year
+    for (z in 1:5){
+      mydata <- data %>% filter(Species == my_species[z]) #subsets to just the first species
+      myrow <- mydata %>% slice(which.max(obs_per_day))
+      MaxDay <- rbind(MaxDay, myrow)
+    }
+}
+```
+Now scale birds/min_of_obs and set days past sept 1
+```{r}
+
+Sept1 <- ymd("1990-09-01")
+Sept1 <- yday(Sept1)
+MaxDay <- MaxDay %>% mutate(
+  birds_per_hour_effort = (obs_per_day/obs_min_per_day)*60,
+  days_past_sept_1 = Day - Sept1
+)
+
+## Does this mean that every day will be counted from 1990-09-01? Each year's Sept 1st needs to be "01".
+
+MaxDay |>
+  arrange(desc(days_past_sept_1)) |>
+  relocate(days_past_sept_1, everything())
+```
+Now go wide format
+
+```{r}
+MaxDayW <- MaxDay %>% pivot_wider(names_from = Species, values_from = birds_per_hour_effort)
+
+MaxDayW |>
+  arrange(Date.)
+```
+
+Look at some plots
+
+```{r}
+ggplot(MaxDay, aes(Year, days_past_sept_1, color = Species))+
+  geom_line()+
+  geom_point()+
+  facet_grid(~Species)
+```
+
+
+address outliers in CH, PG, and RT - cannot have values less than 0
+
+```{r}
+MaxDay2 <- MaxDay |>
+  filter(days_past_sept_1 > 0)
+
+```
+
+
+try graphs again without outliers
+
+```{r}
+ggplot(MaxDay2, aes(Year, days_past_sept_1, color = Species))+
+  geom_line()+
+  geom_point()+
+  geom_smooth() +
+  facet_grid(~Species)
+```
+
+```{r}
+ggplot(MaxDay2, aes(Year, Day, group = Species, color = Species))+
+  geom_point()+
+  geom_line() +
+  geom_smooth(aes(group = Species))
+```
+
+```{r}
+ggplot(data = MaxDay2, aes(x = Year, 
+                          y = days_past_sept_1, 
+                          group = Species, color = Species))+
+  geom_point()+
+  geom_line() +
+  geom_smooth(aes(group = Species))
+```
+
+
+## Goshute Mtns
+
+set up
+
+```{r}
+rm(list = ls())
+library(lubridate)
+library(here)
+library(tidyverse)
+```
+
+```{r}
+#DF <-read.csv(here("Data", "Cape_May1.csv"))
+
+DF <- read.csv(here("Data", "Processed Data", "Goshute_Mtns1.csv"), na = c("NA"))
+```
+
+Now get 1 row per day
+
+```{r}
+DF$Date <-dmy(DF$Date)
+```
+
+Now go
+
+```{r}
+DF <- DF %>% group_by(Date) %>% summarise(
+  obs_min_per_day = sum(Duration),
+  AK_per_day = sum(AK),
+  RT_per_day = sum(RT),
+  PG_per_day = sum(PG),
+  CH_per_day = sum(CH),
+  SS_per_day = sum(SS)
+)
+
+```
+Now make julian date
+
+```{r}
+DF$Day<- yday(DF$Date)
+```
+
+Now make long
+
+```{r}
+DFL <- DF %>% pivot_longer(AK_per_day:SS_per_day,names_to = "Species", values_to = "obs_per_day")
+```
+
+Now we need to know the date each year on which the max number of observations was determined
+
+Loop? There is probabaly an easier way, but we'll go with this for now.
+
+Let's find out a few things. First, how many years in the data?
+
+```{r}
+DFL$Year <- year(DFL$Date)
+num_years <- length(unique(DFL$Year))
+years <- unique(DFL$Year)
+```
+
+Create data frame for results
+
+```{r}
+MaxDay <-data.frame(Date = character(),
+                    obs_min_per_day = integer(),
+                    Day = numeric(),
+                    Species = character(),
+                    obs_per_day = integer(),
+                    Year = numeric(),
+                    stringsAsFactors = FALSE)
+```
+Grab the species names
+
+```{r}
+my_species <- unique(DFL$Species)
+num_rows <- length(my_species)*num_years #gives total number of rows of output for output data frame
+```
+Can I do this by doing a group_by and summarise for DFL? Lets try:
+
+```{r}
+DFL_summary <- DFL %>% group_by(Year, Species) %>% summarise(
+  max_obs_per_day = max(obs_per_day)
+)
+```
+
+Now build the loop. There are 5 species, and we need to step through each species for each year
+```{r}
+for (i in 1:num_rows){
+  data <- DFL |> filter(Year == years[i]) #grab just the data for the first year
+    for (z in 1:5){
+      mydata <- data %>% filter(Species == my_species[z]) #subsets to just the first species
+      myrow <- mydata %>% slice(which.max(obs_per_day))
+      MaxDay <- rbind(MaxDay, myrow)
+    }
+}
+```
+Now scale birds/min_of_obs and set days past sept 1
+```{r}
+
+Sept1 <- ymd("1990-09-01")
+Sept1 <- yday(Sept1)
+MaxDay <- MaxDay %>% mutate(
+  birds_per_hour_effort = (obs_per_day/obs_min_per_day)*60,
+  days_past_sept_1 = Day - Sept1
+)
+
+## Does this mean that every day will be counted from 1990-09-01? Each year's Sept 1st needs to be "01".
+
+MaxDay |>
+  arrange(desc(days_past_sept_1)) |>
+  relocate(days_past_sept_1, everything())
+```
+Now go wide format
+
+```{r}
+MaxDayW <- MaxDay %>% pivot_wider(names_from = Species, values_from = birds_per_hour_effort)
+
+MaxDayW |>
+  arrange(Date)
+```
+
+Look at some plots
+
+```{r}
+ggplot(MaxDay, aes(Year, days_past_sept_1, color = Species))+
+  geom_line()+
+  geom_point()+
+  facet_grid(~Species)
+```
+
+address outliers in CH, PG, and RT - cannot have values less than 0
+
+```{r}
+MaxDay2 <- MaxDay |>
+  filter(days_past_sept_1 > 0)
+
+```
+
+
+Run plots again without outliers
+```{r}
+ggplot(MaxDay2, aes(Year, days_past_sept_1, color = Species))+
+  geom_line()+
+  geom_point()+
+  facet_grid(~Species)
+```
+
+```{r}
+ggplot(MaxDay2, aes(Year, Day, group = Species, color = Species))+
+  geom_point()+
+  geom_line() +
+  geom_smooth(aes(group = Species))
+```
+
+```{r}
+ggplot(data = MaxDay2, aes(x = Year, 
+                          y = days_past_sept_1, 
+                          group = Species, color = Species))+
+  geom_point()+
+  geom_line() +
+  geom_smooth(aes(group = Species))
+```
+
+
+
